@@ -22,6 +22,26 @@ import json
 
 load_dotenv()
 
+def get_user_event_selection():
+    events = {
+        "speech_final": False,
+        "is_final": False,
+        "utterance_end": False,
+        "interim_results": False
+    }
+    message = ""
+    message += "Select the events you want to add messages for (y/n):"
+    message += "\nInstructions:"
+    message += "\n- ONLY ONE option is allowed."
+    message += "\n- The options are speech_final, is_final, utterance_end, interim_results"
+    print(message)
+    for event, _ in events.items():
+        choice = input(f"{event.replace('_', ' ').title()}: ").strip().lower()
+        if choice == 'y':
+            events[event] = True
+            break
+    return events
+
 def create_conversation(payload):
     try:
         url = os.getenv("NIO_SBX_URL")
@@ -121,10 +141,11 @@ def main():
         # )
         # deepgram: DeepgramClient = DeepgramClient("", config)
         # otherwise, use default config
-        deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
+        deepgram_api_key = os.getenv("DEEPGRAM_API_KEY", "")
         deepgram = DeepgramClient(deepgram_api_key)
 
         dg_connection = deepgram.listen.live.v("1")
+        user_events = get_user_event_selection()
 
         def on_open(self, open, **kwargs):
             global conversation_id
@@ -133,7 +154,7 @@ def main():
             response = create_conversation(payload)
             conversation_id = response["id"]
             print(f"{ conversation_id = }")
-``
+
         def on_message(self, result, **kwargs):
             global is_finals
             global current_speaker
