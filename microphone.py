@@ -179,29 +179,37 @@ def main():
                 # Speech final is the lowest latency result as it triggers as soon an the endpointing value has triggered
                 if result.speech_final:
                     utterance =  " ".join(is_finals)
-                    speech_final = f"Speech Final - {utterance}"
-                    line = f"Speaker - {current_speaker} {speech_final}"
+                    line = f"Speaker - {current_speaker} Speech Final - {utterance}"
                     print(line)
+                    # Reset Is Finals Event
                     is_finals = []
-                    print("Adding message to conversation!")
-                    payload = build_add_message_payload(line)
-                    add_message(payload, conversation_id)
                     # Reset current_speaker
                     current_speaker = None
                     # Reset list of speakers in a sentence
                     speakers = []
-                    
+                    # Adds message to conversation based on user preferences
+                    if user_events["speech_final"]:
+                        print("Adding message to conversation!")
+                        payload = build_add_message_payload(line)
+                        add_message(payload, conversation_id)
                 else:
                     # These are useful if you need real time captioning and update what the Interim Results produced
-                    is_final = f"Is Final - {sentence}"
-                    line = f"Speaker - {current_speaker} {is_final}"
+                    line = f"Speaker - {current_speaker} Is Final - {sentence}"
                     print(line)
-                    # print("Adding message to conversation!")
-                    # payload = build_add_message_payload(line)
-                    # add_message(payload, conversation_id)
+                    # Adds message to conversation based on user preferences
+                    if user_events["is_final"]:
+                        print("Adding message to conversation!")
+                        payload = build_add_message_payload(line)
+                        add_message(payload, conversation_id)
             else:
+                line = f"Speaker - {current_speaker} - Interim Results - {sentence}"
                 # These are useful if you need real time captioning of what is being spoken
-                print(f"Interim Results: {sentence}")
+                print(line)
+                # Adds message to conversation based on user preferences
+                if user_events["interim_results"]:
+                    print("Adding message to conversation!")
+                    payload = build_add_message_payload(line)
+                    add_message(payload, conversation_id)
 
         def on_metadata(self, metadata, **kwargs):
             print(f"Metadata: {metadata}")
@@ -218,6 +226,11 @@ def main():
                 line = f"Utterance End: {utterance}"
                 print(line)
                 is_finals = []
+                # Adds message to conversation based on user preferences
+                if user_events["utterance_end"]:
+                    print("Adding message to conversation!")
+                    payload = build_add_message_payload(line)
+                    add_message(payload, conversation_id)
 
         def on_close(self, close, **kwargs):
             global conversation_id
