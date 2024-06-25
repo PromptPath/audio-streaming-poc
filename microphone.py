@@ -22,28 +22,40 @@ import json
 
 load_dotenv()
 
+def get_user_event_selection():
+    events = {
+        "speech_final": False,
+        "is_final": False,
+        "utterance_end": False,
+        "interim_results": False
+    }
+    message = ""
+    message += "Select the events you want to add messages for (y/n):"
+    message += "\nInstructions:"
+    message += "\n- ONLY ONE option is allowed."
+    message += "\n- The options are speech_final, is_final, utterance_end, interim_results"
+    print(message)
+    for event, _ in events.items():
+        choice = input(f"{event.replace('_', ' ').title()}: ").strip().lower()
+        if choice == 'y':
+            events[event] = True
+            break
+    return events
+
 def create_conversation(payload):
-    # TODO: Complete code to pull the conversations from a third party service
     try:
-        # url = os.getenv("NIO_BASE_URL")
-        url = "https://api-sbx.promptpath.ai"
-        # token = "709d1cb7-6d10-4ce1-9ece-2da6327eadc1" # active engage token
-        token = "AKbRx86cHdPww92guIC6T3BlbkFJ8YbcCA3DBotAg3etGSf6" # testing_org_token
+        url = os.getenv("NIO_SBX_URL")
+        token = os.getenv("SBX_TESTING_ORG_X_API_KEY")
         r = requests.post(
             f"{url}/v2/conversations",
             data =json.dumps(payload),
             headers = {
-                # "X-API-Key": os.getenv("NIO_ACTIVE_ENGAGE_X_API_KEY")
                 "X-API-Key": token,
                 "accept": "application/json",
                 "Content-Type": "application/json",
             }
         )
-        # print(f"{url = }")
-        # print(f"{r = }")
         r.raise_for_status()
-        # response = r.json()
-        # print(f"{response = }")
         return r.json()
     except requests.exceptions.HTTPError as errh:
         Logger.error("Http Error:",errh)
@@ -57,24 +69,18 @@ def create_conversation(payload):
 def add_message(payload, conversation_id):
     # TODO: Complete code to pull the conversations from a third party service
     try:
-        # url = os.getenv("NIO_BASE_URL")
-        url = "https://api-sbx.promptpath.ai"
-        token = "709d1cb7-6d10-4ce1-9ece-2da6327eadc1"
+        url = os.getenv("NIO_SBX_URL")
+        token = os.getenv("SBX_TESTING_ORG_X_API_KEY")
         r = requests.post(
             f"{url}/v2/messagelist/{conversation_id}",
             data =json.dumps(payload),
             headers = {
-                # "X-API-Key": os.getenv("NIO_ACTIVE_ENGAGE_X_API_KEY")
                 "X-API-Key": token,
                 "accept": "application/json",
                 "Content-Type": "application/json",
             }
         )
-        # print(f"{url = }")
-        # print(f"{r = }")
         r.raise_for_status()
-        # response = r.json()
-        # print(f"{response = }")
         return r.json()
     except requests.exceptions.HTTPError as errh:
         Logger.error("Http Error:",errh)
@@ -88,7 +94,7 @@ def add_message(payload, conversation_id):
 def build_conversation_payload():
     return {
         "external_id": "my-deepgram-1",
-        "dealerId": "ba737759-1ea5-4e52-bde3-72dfe3e739b6",
+        "dealerId": os.getenv("SBX_DEEPGRAM_TOYOTA_DEALER_ID"),
         "channelType": "deepgram",
         "deviceType": "string",
         "timestamp": "2024-06-13T14:56:05.491Z",
@@ -135,10 +141,11 @@ def main():
         # )
         # deepgram: DeepgramClient = DeepgramClient("", config)
         # otherwise, use default config
-        deepgram_api_key = "c51191cab40bcf8639eb339153f8a9eddb6f6767"
+        deepgram_api_key = os.getenv("DEEPGRAM_API_KEY", "")
         deepgram = DeepgramClient(deepgram_api_key)
 
         dg_connection = deepgram.listen.live.v("1")
+        user_events = get_user_event_selection()
 
         def on_open(self, open, **kwargs):
             global conversation_id
@@ -153,7 +160,6 @@ def main():
             global current_speaker
             global speakers
             sentence = result.channel.alternatives[0].transcript
-            # print(f"{result}")
             # Check if speaker exist on the current message
             if result.channel.alternatives and result.channel.alternatives[0].words:
                 current_speaker = result.channel.alternatives[0].words[0].speaker
@@ -173,29 +179,37 @@ def main():
                 # Speech final is the lowest latency result as it triggers as soon an the endpointing value has triggered
                 if result.speech_final:
                     utterance =  " ".join(is_finals)
-                    speech_final = f"Speech Final - {utterance}"
-                    line = f"Speaker - {current_speaker} {speech_final}"
+                    line = f"Speaker - {current_speaker} Speech Final - {utterance}"
                     print(line)
+                    # Reset Is Finals Event
                     is_finals = []
-                    print("Adding message to conversation!")
-                    payload = build_add_message_payload(line)
-                    add_message(payload, conversation_id)
                     # Reset current_speaker
                     current_speaker = None
                     # Reset list of speakers in a sentence
                     speakers = []
-                    
+                    # Adds message to conversation based on user preferences
+                    if user_events["speech_final"]:
+                        print("Adding message to conversation!")
+                        payload = build_add_message_payload(line)
+                        add_message(payload, conversation_id)
                 else:
                     # These are useful if you need real time captioning and update what the Interim Results produced
-                    is_final = f"Is Final - {sentence}"
-                    line = f"Speaker - {current_speaker} {is_final}"
+                    line = f"Speaker - {current_speaker} Is Final - {sentence}"
                     print(line)
-                    # print("Adding message to conversation!")
-                    # payload = build_add_message_payload(line)
-                    # add_message(payload, conversation_id)
+                    # Adds message to conversation based on user preferences
+                    if user_events["is_final"]:
+                        print("Adding message to conversation!")
+                        payload = build_add_message_payload(line)
+                        add_message(payload, conversation_id)
             else:
+                line = f"Speaker - {current_speaker} - Interim Results - {sentence}"
                 # These are useful if you need real time captioning of what is being spoken
-                print(f"Interim Results: {sentence}")
+                print(line)
+                # Adds message to conversation based on user preferences
+                if user_events["interim_results"]:
+                    print("Adding message to conversation!")
+                    payload = build_add_message_payload(line)
+                    add_message(payload, conversation_id)
 
         def on_metadata(self, metadata, **kwargs):
             print(f"Metadata: {metadata}")
@@ -212,6 +226,11 @@ def main():
                 line = f"Utterance End: {utterance}"
                 print(line)
                 is_finals = []
+                # Adds message to conversation based on user preferences
+                if user_events["utterance_end"]:
+                    print("Adding message to conversation!")
+                    payload = build_add_message_payload(line)
+                    add_message(payload, conversation_id)
 
         def on_close(self, close, **kwargs):
             global conversation_id
