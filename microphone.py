@@ -270,7 +270,7 @@ def main():
             utterance_end_ms="1000",
             vad_events=True,
             # Time in milliseconds of silence to wait for before finalizing speech
-            endpointing=300,
+            endpointing=500,
             # Get the speaker
             diarize=True,
             #  adds punctuation and capitalization to your transcript.
