@@ -1,13 +1,18 @@
 # Project Setup
+<<<<<<< mozziebr/s31/NIO-629/add-support-for-multiple-events-to-store-in-nio
 ## Only for MacOS
+=======
+## MacOS only
+>>>>>>> main
 - Install homebrew via homebrew.sh and add it to the PATH
 - Install python `brew install python@3.10` 
 - Add python to path `echo 'export PATH="/opt/homebrew/opt/python@3.10/bin:$PATH"' >> ~/.zshrc`
-- Activate virtual environment `source env/bin/activate`
-- Install requirements `pip install -r requirements.txt`
+- Create a virtual environment. i.e `python3.10 -m venv env`
+- Activate the virtual environment `source env/bin/activate`
+- Install requirements inside the virtual environment `pip install -r requirements.txt`
+- Install audio dependencies for `brew install portaudio`
 
 # Run the project
-- Install audio dependencies for `brew install portaudio`
 - Use this command: `python3.10 microphone.py`
 - See the terminal below.
 - Once the conversation is ended, hit Enter.
