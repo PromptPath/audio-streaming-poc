@@ -1,4 +1,5 @@
 # Project Setup
+## MacOS only
 - Install homebrew via homebrew.sh and add it to the PATH
 - Install python `brew install python@3.10` 
 - Add python to path `echo 'export PATH="/opt/homebrew/opt/python@3.10/bin:$PATH"' >> ~/.zshrc`
