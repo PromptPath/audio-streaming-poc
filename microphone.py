@@ -23,27 +23,19 @@ import json
 load_dotenv()
 
 def create_conversation(payload):
-    # TODO: Complete code to pull the conversations from a third party service
     try:
-        # url = os.getenv("NIO_BASE_URL")
-        url = "https://api-sbx.promptpath.ai"
-        # token = "709d1cb7-6d10-4ce1-9ece-2da6327eadc1" # active engage token
-        token = "AKbRx86cHdPww92guIC6T3BlbkFJ8YbcCA3DBotAg3etGSf6" # testing_org_token
+        url = os.getenv("NIO_SBX_URL")
+        token = os.getenv("SBX_TESTING_ORG_X_API_KEY")
         r = requests.post(
             f"{url}/v2/conversations",
             data =json.dumps(payload),
             headers = {
-                # "X-API-Key": os.getenv("NIO_ACTIVE_ENGAGE_X_API_KEY")
                 "X-API-Key": token,
                 "accept": "application/json",
                 "Content-Type": "application/json",
             }
         )
-        # print(f"{url = }")
-        # print(f"{r = }")
         r.raise_for_status()
-        # response = r.json()
-        # print(f"{response = }")
         return r.json()
     except requests.exceptions.HTTPError as errh:
         Logger.error("Http Error:",errh)
@@ -57,24 +49,18 @@ def create_conversation(payload):
 def add_message(payload, conversation_id):
     # TODO: Complete code to pull the conversations from a third party service
     try:
-        # url = os.getenv("NIO_BASE_URL")
-        url = "https://api-sbx.promptpath.ai"
-        token = "709d1cb7-6d10-4ce1-9ece-2da6327eadc1"
+        url = os.getenv("NIO_SBX_URL")
+        token = os.getenv("SBX_TESTING_ORG_X_API_KEY")
         r = requests.post(
             f"{url}/v2/messagelist/{conversation_id}",
             data =json.dumps(payload),
             headers = {
-                # "X-API-Key": os.getenv("NIO_ACTIVE_ENGAGE_X_API_KEY")
                 "X-API-Key": token,
                 "accept": "application/json",
                 "Content-Type": "application/json",
             }
         )
-        # print(f"{url = }")
-        # print(f"{r = }")
         r.raise_for_status()
-        # response = r.json()
-        # print(f"{response = }")
         return r.json()
     except requests.exceptions.HTTPError as errh:
         Logger.error("Http Error:",errh)
@@ -88,7 +74,7 @@ def add_message(payload, conversation_id):
 def build_conversation_payload():
     return {
         "external_id": "my-deepgram-1",
-        "dealerId": "ba737759-1ea5-4e52-bde3-72dfe3e739b6",
+        "dealerId": os.getenv("SBX_DEEPGRAM_TOYOTA_DEALER_ID"),
         "channelType": "deepgram",
         "deviceType": "string",
         "timestamp": "2024-06-13T14:56:05.491Z",
@@ -135,7 +121,7 @@ def main():
         # )
         # deepgram: DeepgramClient = DeepgramClient("", config)
         # otherwise, use default config
-        deepgram_api_key = "c51191cab40bcf8639eb339153f8a9eddb6f6767"
+        deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
         deepgram = DeepgramClient(deepgram_api_key)
 
         dg_connection = deepgram.listen.live.v("1")
@@ -147,13 +133,12 @@ def main():
             response = create_conversation(payload)
             conversation_id = response["id"]
             print(f"{ conversation_id = }")
-
+``
         def on_message(self, result, **kwargs):
             global is_finals
             global current_speaker
             global speakers
             sentence = result.channel.alternatives[0].transcript
-            # print(f"{result}")
             # Check if speaker exist on the current message
             if result.channel.alternatives and result.channel.alternatives[0].words:
                 current_speaker = result.channel.alternatives[0].words[0].speaker
