@@ -1,0 +1,5 @@
+openai==1.30.0
+python-dotenv==1.0.1
+deepgram-sdk==3.2.7
+pyaudio==0.2.14
+requests==2.32.3
