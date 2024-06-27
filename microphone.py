@@ -22,6 +22,18 @@ import json
 
 load_dotenv()
 
+def get_endpointing_value():
+    while True:
+        try:
+            value = int(input("Enter endpointing value in milliseconds (e.g., 500): ").strip())
+            if value > 0:
+                return value
+            else:
+                print("Please enter a positive integer.")
+        except ValueError:
+            print("Invalid input. Please enter a positive integer.")
+
+
 def get_user_event_selection():
     events = {
         "speech_final": False,
@@ -146,6 +158,7 @@ def main():
 
         dg_connection = deepgram.listen.live.v("1")
         user_events = get_user_event_selection()
+        endpointing = get_endpointing_value()
 
         def on_open(self, open, **kwargs):
             global conversation_id
@@ -270,7 +283,7 @@ def main():
             utterance_end_ms="1000",
             vad_events=True,
             # Time in milliseconds of silence to wait for before finalizing speech
-            endpointing=500,
+            endpointing=str(endpointing),
             # Get the speaker
             diarize=True,
             #  adds punctuation and capitalization to your transcript.
