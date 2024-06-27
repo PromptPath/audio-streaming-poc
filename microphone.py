@@ -25,7 +25,7 @@ load_dotenv()
 def get_endpointing_value():
     while True:
         try:
-            value = int(input("Enter endpointing value in milliseconds (e.g., 500): ").strip())
+            value = int(input("\nEnter endpointing value in milliseconds (e.g., 500)\nBear in mind endpointing is the time in milliseconds of silence to wait for before finalizing speech: ").strip())
             if value > 0:
                 return value
             else:
